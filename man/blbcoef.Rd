@@ -5,7 +5,11 @@
 \title{compute the coefficients from fit}
 \usage{
 blbcoef(fit)
+
+blbcoef(fit)
 }
 \description{
+compute the coefficients from fit
+
 compute the coefficients from fit
 }

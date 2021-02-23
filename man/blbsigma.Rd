@@ -5,7 +5,11 @@
 \title{compute sigma from fit}
 \usage{
 blbsigma(fit)
+
+blbsigma(fit)
 }
 \description{
+compute sigma from fit
+
 compute sigma from fit
 }

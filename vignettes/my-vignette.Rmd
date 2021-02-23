@@ -1,0 +1,45 @@
+---
+title: "STA 141C Project"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+### About the Package: blblm
+
+### Installation
+
+You can install the blblm pakcage from github with:
+```{r}
+#install.packages("devtools")
+devtools::install_github("ucdavis-sta141c-2021-winter/blblm")
+```
+
+### Loading the Library
+
+To load the library, all you have to do is the following:
+```{r}
+library(blblm)
+library(tidyverse)
+library(furrr)
+library(bench)
+usethis::use_package("tidyverse", type = "suggest")
+```
+Tidyverse, Furr, and Bench has been loaded as well.
+
+###Data: mtcars
+To explore the package blblm, we will be using the dataset mtcars. The dataset contains 32 observations (rows) on 11 variables. 
+```{r}
+dim(mtcars)
+mtcars
+```
+
+```{r, warning=FALSE, eval = FALSE}
+plan(multiprocess, workers = 8)
+bench::mark(blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = TRUE), 
+            blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = FALSE), 
+            check = FALSE)
+```
+

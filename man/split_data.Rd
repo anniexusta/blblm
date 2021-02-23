@@ -5,7 +5,11 @@
 \title{split data into m parts of approximated equal sizes}
 \usage{
 split_data(data, m)
+
+split_data(data, m)
 }
 \description{
+split data into m parts of approximated equal sizes
+
 split data into m parts of approximated equal sizes
 }
