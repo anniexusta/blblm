@@ -11,8 +11,8 @@ vignette: >
 
 ### Installation
 
-You can install the blblm pakcage from github with:
-```{r}
+You can install the `blblm` pakcage from github with:
+```{r, eval=FALSE}
 #install.packages("devtools")
 devtools::install_github("ucdavis-sta141c-2021-winter/blblm")
 ```
@@ -27,19 +27,160 @@ library(furrr)
 library(bench)
 usethis::use_package("tidyverse", type = "suggest")
 ```
-Tidyverse, Furr, and Bench has been loaded as well.
 
-###Data: mtcars
-To explore the package blblm, we will be using the dataset mtcars. The dataset contains 32 observations (rows) on 11 variables. 
+`Tidyverse`, `Furr`, and `Bench` has been loaded as well since we will be using them.
+
+### Data: mtcars
+
+
+To explore the package `blblm`, we will be using the dataset `mtcars`. The dataset contains 32 observations (rows) on 11 variables. 
 ```{r}
 dim(mtcars)
 mtcars
 ```
+###Blblm Uses
 
-```{r, warning=FALSE, eval = FALSE}
-plan(multiprocess, workers = 8)
-bench::mark(blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = TRUE), 
-            blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = FALSE), 
-            check = FALSE)
+The package `blblm` is used to fit linear models and bootstrap over a linear regression model. The `blblm` function follows the format `blblm(formula, data, m, B, parallel)`. Here are some examples using the `mtcars` data from above:
+
+```{r, warning=FALSE}
+fit = blblm(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, parallel = FALSE)
+fit
+fit$formula
 ```
 
+We can also find certain values of the linear regression using the `blblm` package, such as the coefficients (intercepts) and the sigma using `coef()` and `sigma()`.
+
+```{r, warning=FALSE}
+coef(fit)
+sigma(fit)
+```
+
+Similarly, we can get the predicted values of a new observation using `predict()` and inputing our fit, new data, and confidence level if applicable. 
+
+```{r, warning=FALSE}
+predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+```
+
+We can also find the confidence interval for the estimates of our model using `confint()`.
+```{r, warning=FALSE}
+confint(fit, c("hp"))
+```
+
+
+### Parallelization: Blblm
+
+I revised the `blblm` function to make it run faster through parallelization. The function is as follows: `blblm(formula, data, m, B, parallel)`. In the current function, the user has the option to choose whether parallel is TRUE or FALSE. If they choose TRUE, they can use more than one CPU in the algorithm. If `parallel = FALSE`, only one CPU is used. Setting `parallel = TRUE` can speed up the computation time. Please look at the following time comparisons. 
+
+```{r, warning=FALSE}
+bm = bench::mark(blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = FALSE), 
+            blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = TRUE), 
+            check = FALSE)
+bm
+```
+
+Likewise, runtime is faster when `parallel = TRUE` when we are computing for the coefficients of the linear model:
+
+```{r}
+fit = blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = FALSE)
+fit1 = blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = TRUE)
+bm1 = bench::mark(coef(fit), 
+            coef(fit1), 
+            check = FALSE)
+bm1
+autoplot(bm1, type = 'violin')
+```
+
+The runtime is slightly faster for the functions `sigma()`, `predict()`, and `confint()` when `parallel = TRUE` is used.
+
+```{r}
+bm2 = bench::mark(sigma(fit), 
+            sigma(fit1), 
+            check = FALSE)
+bm2
+autoplot(bm2, type = 'violin')
+```
+
+```{r}
+p = predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+p1 = predict(fit1, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+
+bm3 = bench::mark(p, p1, check = FALSE)
+bm3
+autoplot(bm3, type = 'violin')
+```
+
+```{r}
+bm4 = bench::mark(confint(fit, c("hp")), confint(fit1, c("hp")), check = FALSE)
+bm4
+autoplot(bm4, type = 'violin')
+```
+
+### Blblogreg Uses
+
+I have also created another function called `blblogreg()`. It's very similar to `blblm()`, but instead of fitting and bootstrapping over linear models, `blblogreg()` is used for logistic regression models. The blblogreg function follows the format `blblogreg(formula, data, m = 10, B = 5000, family, parallel = TRUE)`. Here are some examples using the mtcars data from above:
+
+```{r, warning=FALSE, eval=FALSE}
+fit = blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = FALSE)
+fit
+fit$formula
+```
+
+`blblogreg` has the following functions to help find certain aspects of logistic regression models:
+*`coef()` finds the intercepts
+*`sigma()` finds the sigma
+*`predict()` predicts vaues given a new observation
+*`confint()` finds the confidence interval
+
+Here is an example of each one:
+```{r}
+coef(fit)
+sigma(fit)
+confint(fit, c("hp"))
+predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)))
+```
+
+### Parallelization: Blblogreg
+
+The `blblogreg` function has a faster runtime if parallelization is allowed. The function for `blblogreg` is as follows: `blblogreg(formula, data, m, B, family, parallel)`. In the current function, the user has the option to choose whether parallel is TRUE or FALSE. If they choose TRUE, they can use more than one CPU in the algorithm. If `parallel = FALSE`, only one CPU is used. Setting `parallel = TRUE` can speed up the computation time. Again, please look at the following time comparisons. 
+
+```{r, warning=FALSE, eval = FALSE}
+bm = bench::mark(blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = FALSE), 
+            blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = TRUE), 
+            check = FALSE)
+bm
+```
+
+Run time for `coef()`, `sigma()`, `predict()`, and `confint()` are all faster for when `parallel = TRUE` in the `blblogreg` function.
+```{r, eval = FALSE}
+fit = blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = FALSE)
+fit1 = blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = TRUE)
+bm1 = bench::mark(coef(fit), 
+            coef(fit1), 
+            check = FALSE)
+bm1
+autoplot(bm1, type = 'violin')
+```
+
+
+```{r, eval = FALSE}
+bm2 = bench::mark(sigma(fit), 
+            sigma(fit1), 
+            check = FALSE)
+bm2
+autoplot(bm2, type = 'violin')
+```
+
+```{r, eval = FALSE}
+p = predict(fit, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+p1 = predict(fit1, data.frame(wt = c(2.5, 3), hp = c(150, 170)), confidence = TRUE)
+
+bm3 = bench::mark(p, p1, check = FALSE)
+bm3
+autoplot(bm3, type = 'violin')
+```
+
+```{r, eval = FALSE}
+bm4 = bench::mark(confint(fit, c("hp")), confint(fit1, c("hp")), check = FALSE)
+bm4
+autoplot(bm4, type = 'violin')
+```

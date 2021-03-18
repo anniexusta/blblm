@@ -26,8 +26,8 @@ utils::globalVariables(c("."))
 #' @examples
 #' blblm(mpg ~wt *hp, data = mtcars, m = 3, B = 100, parallel = TRUE)
 blblm <- function(formula, data, m = 10, B = 5000, parallel = TRUE) {
-  set.seed(10)
   if (parallel == TRUE){
+    set.seed(10)
     plan(multiprocess, workers = 8)
     data_list <- split_data(data, m)
     estimates <- future_map(
@@ -37,7 +37,7 @@ blblm <- function(formula, data, m = 10, B = 5000, parallel = TRUE) {
     res <- list(estimates = estimates, formula = formula)
   }
   else{
-    plan(multiprocess, workers = 1)
+    set.seed(10)
     data_list <- split_data(data, m)
     estimates <- map(
       data_list,
@@ -223,8 +223,8 @@ map_rbind <- function(.x, .f, ...) {
 #' @examples
 #' blblogreg(mpg ~wt *hp, data = mtcars, m = 3, B = 100, family = binomial(), parallel = TRUE)
 blblogreg = function(formula, data, m = 10, B = 5000, family, parallel = TRUE) {
-
   if (parallel == TRUE){
+    set.seed(10)
     plan(multiprocess, workers = 8)
     data_list <- split_data(data, m)
     estimates <- future_map(
@@ -234,7 +234,7 @@ blblogreg = function(formula, data, m = 10, B = 5000, family, parallel = TRUE) {
     res <- list(estimates = estimates, formula = formula)
   }
   else{
-    plan(multiprocess, workers = 1)
+    set.seed(10)
     data_list <- split_data(data, m)
     estimates <- map(
       data_list,

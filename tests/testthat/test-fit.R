@@ -86,7 +86,7 @@ test_that("blblm works", {
 
 
 #using blblogreg
-test_that("blblm works", {
+test_that("blblogreg works", {
   fit <- blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = FALSE)
   fit1 <- blblogreg(mpg ~ wt * hp, data = mtcars, m = 3, B = 100, family = binomial, parallel = TRUE)
   expect_equal(length(coef(fit)), length(coef(fit1)))
